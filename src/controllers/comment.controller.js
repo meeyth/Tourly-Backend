@@ -2,6 +2,7 @@ import Comment from "../models/comment.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import { checkAbusiveText } from "../utils/checkAbusiveText.js";
 
 // Create a new comment
 const createComment = asyncHandler(async (req, res) => {
@@ -9,6 +10,12 @@ const createComment = asyncHandler(async (req, res) => {
 
     if (!text?.trim() || !post) {
         throw new ApiError(400, "Text and post ID are required");
+    }
+
+    const abusive = await checkAbusiveText(text);
+
+    if (abusive) {
+        return res.status(400).json(new ApiResponse(400, null, "Comment contains abusive content"));
     }
 
     const comment = await Comment.create({

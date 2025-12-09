@@ -11,6 +11,13 @@ const createPost = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Title, city, and country are required");
   }
 
+  const abusiveTitle = await checkAbusiveText(title || "");
+  const abusiveDescription = await checkAbusiveText(description || "");
+
+  if (abusiveTitle || abusiveDescription) {
+    return res.status(400).json(new ApiResponse(400, null, "Post contains abusive content"));
+  }
+
   const post = await Post.create({
     title,
     description,

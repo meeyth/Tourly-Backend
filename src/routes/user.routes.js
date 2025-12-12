@@ -8,7 +8,7 @@ import {
   getCurrentUser,
   updateProfile,
   getUserProfile,
-  toggleFollow
+ // toggleFollow
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/Auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"; //  multer for avatar
@@ -26,7 +26,7 @@ router.post("/change-password", verifyJWT, changeCurrentPassword);
 router.get("/me", verifyJWT, getCurrentUser);
 router.patch("/update", verifyJWT, upload.single("avatar"), updateProfile); //  also supports updating avatar
 router.get("/profile/:username", verifyJWT, getUserProfile);
-router.post("/follow/:userId", verifyJWT, toggleFollow);
+//router.post("/follow/:userId", verifyJWT, toggleFollow);
 
 export default router;
 

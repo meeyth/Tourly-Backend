@@ -89,6 +89,8 @@ import userRouter from "./routes/user.routes.js";
 import commentRouter from "./routes/comment.routes.js";
 import followRouter from "./routes/follow.routes.js";
 import postRouter from "./routes/post.routes.js"; 
+import homeRoutes from "./routes/home.routes.js";
+import wishlistRouter from "./routes/wishlist.routes.js";
 
 // Test route
 app.get("/api/v1/test", (req, res) => {
@@ -100,6 +102,8 @@ app.use("/api/v1/users", userRouter);          // User routes: register, login, 
 app.use("/api/v1/posts", postRouter);          // Post routes: create, get, like posts, etc.
 app.use("/api/v1/comments", commentRouter);    // Comment routes: add, get, delete comments
 app.use("/api/v1/follow", followRouter);       // Follow routes: follow/unfollow users, get followers/following
+app.use("/api/v1/home", homeRoutes);
+app.use("/api/v1/wishlist", wishlistRouter);
 
 // Note: Protect routes inside each router with verifyJWT middleware as needed.
 

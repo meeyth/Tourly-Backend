@@ -1,27 +1,3 @@
-/*import { Router } from "express";
-import {
-  createPost,
-  getAllPosts,
-  getSinglePost,
-  updatePost,
-  deletePost,
-  likePost
-} from "../controllers/post.controller.js";
-
-const router = Router();
-
-router.post("/", createPost);
-router.get("/", getAllPosts);
-router.get("/:postId", getSinglePost);
-router.patch("/:postId", updatePost);
-router.delete("/:postId", deletePost);
-
-// Like a post
-router.post("/:postId/like", likePost);
-
-export default router;
-*/
-
 import { Router } from "express";
 import {
   createPost,
@@ -33,14 +9,15 @@ import {
 } from "../controllers/post.controller.js";
 
 import { verifyJWT } from "../middlewares/Auth.middleware.js";
-
+import { upload } from "../middlewares/multer.middleware.js"; // << ADD THIS
 const router = Router();
 
 router.get("/", getAllPosts);
 router.get("/:postId", getPostById);
 
 // Protected routes: user must be logged in
-router.post("/", verifyJWT, createPost);
+//router.post("/", verifyJWT, createPost);
+router.post("/", verifyJWT, upload.array("images"), createPost);
 router.patch("/:postId", verifyJWT, updatePost);
 router.delete("/:postId", verifyJWT, deletePost);
 

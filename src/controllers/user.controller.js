@@ -30,9 +30,9 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 // ---------------------- Register User ----------------------
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullname, email, username, password } = req.body;
+    const {  email, username, password } = req.body;
 
-    if ([fullname, email, username, password].some(field => !field?.trim())) {
+    if ([ email, username, password].some(field => !field?.trim())) {
         throw new ApiError(400, "All fields are required");
     }
 
@@ -52,7 +52,6 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.create({
-        fullname,
         email,
         username: username.toLowerCase(),
         password,
@@ -194,7 +193,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 // ---------------------- Follow / Unfollow ----------------------
-const toggleFollow = asyncHandler(async (req, res) => {
+/*const toggleFollow = asyncHandler(async (req, res) => {
     const { userId } = req.params;
     if (req.user._id.toString() === userId) {
         throw new ApiError(400, "You cannot follow yourself");
@@ -208,7 +207,7 @@ const toggleFollow = asyncHandler(async (req, res) => {
 
     await Follow.create({ follower: req.user._id, following: userId });
     return res.status(200).json(new ApiResponse(200, {}, "Followed successfully"));
-});
+});*/
 
 // ---------------------- Export ----------------------
 export {
@@ -220,6 +219,6 @@ export {
     getCurrentUser,
     updateProfile,
     getUserProfile,
-    toggleFollow
+   
 };
 

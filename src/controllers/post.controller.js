@@ -153,7 +153,7 @@ const deletePost = asyncHandler(async (req, res) => {
 // ------------------------------------------------------------
 // LIKE / UNLIKE POST
 // ------------------------------------------------------------
-export const toggleLikePost = async (req, res) => {
+/*export const toggleLikePost = async (req, res) => {
     try {
         const userId = req.user._id;
         const postId = req.params.postId;
@@ -204,6 +204,70 @@ export const toggleLikePost = async (req, res) => {
             // Populate before sending response
             post = await post.populate("createdBy", "username avatar")
                              .populate("likes", "username");
+
+            return res.json({
+                success: true,
+                message: "Post liked",
+                data: post
+            });
+        }
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};*/
+export const toggleLikePost = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const postId = req.params.postId;
+
+        let post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found"
+            });
+        }
+
+        const alreadyLiked = post.likes.includes(userId);
+
+        if (alreadyLiked) {
+            post.likes.pull(userId);
+            await post.save();
+
+            await Wishlist.findOneAndUpdate(
+                { user: userId },
+                { $pull: { posts: postId } }
+            );
+
+            // Re-fetch the post with populated fields
+            post = await Post.findById(postId)
+                .populate("createdBy", "username avatar")
+                .populate("likes", "username");
+
+            return res.json({
+                success: true,
+                message: "Post unliked",
+                data: post
+            });
+        } else {
+            post.likes.push(userId);
+            await post.save();
+
+            await Wishlist.findOneAndUpdate(
+                { user: userId },
+                { $addToSet: { posts: postId } },
+                { upsert: true, new: true }
+            );
+
+            // Re-fetch the post with populated fields
+            post = await Post.findById(postId)
+                .populate("createdBy", "username avatar")
+                .populate("likes", "username");
 
             return res.json({
                 success: true,

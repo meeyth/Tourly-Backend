@@ -13,7 +13,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
 // ------------------------------------------------------------
 // CREATE NEW POST
 // ------------------------------------------------------------
@@ -58,6 +57,9 @@ const createPost = asyncHandler(async (req, res) => {
     images: uploadedImageUrls,
     createdBy: req.user._id,
   });
+
+  // Populate createdBy before sending response
+  await post.populate("createdBy", "username avatar");
 
   return res
     .status(201)
@@ -156,7 +158,7 @@ export const toggleLikePost = async (req, res) => {
         const userId = req.user._id;
         const postId = req.params.postId;
 
-        const post = await Post.findById(postId);
+        let post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({
                 success: false,
@@ -178,6 +180,10 @@ export const toggleLikePost = async (req, res) => {
                 { $pull: { posts: postId } }
             );
 
+            // Populate before sending response
+            post = await post.populate("createdBy", "username avatar")
+                             .populate("likes", "username");
+
             return res.json({
                 success: true,
                 message: "Post unliked",
@@ -194,6 +200,10 @@ export const toggleLikePost = async (req, res) => {
                 { $addToSet: { posts: postId } },
                 { upsert: true, new: true }
             );
+
+            // Populate before sending response
+            post = await post.populate("createdBy", "username avatar")
+                             .populate("likes", "username");
 
             return res.json({
                 success: true,

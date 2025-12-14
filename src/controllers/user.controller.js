@@ -11,6 +11,7 @@ import User from "../models/user.model.js"; // ✅ correct
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import { options } from "../constants.js";
+import Post from "../models/post.model.js";
 
 // ---------------------- Helper: Generate Tokens ----------------------
 const generateAccessAndRefreshToken = async (userId) => {
@@ -139,26 +140,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
-// ---------------------- Change Password ----------------------
-const changeCurrentPassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
-
-    const user = await User.findById(req.user._id);
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
-    if (!isPasswordCorrect) {
-        throw new ApiError(400, "Invalid old password");
-    }
-
-    user.password = newPassword;
-    await user.save({ validateBeforeSave: false });
-
-    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
-});
-
-// ---------------------- Get Current User ----------------------
-const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"));
-});
 
 // ---------------------- Update Profile ----------------------
 const updateProfile = asyncHandler(async (req, res) => {
@@ -181,33 +162,32 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 // ---------------------- Get Other User Profile ----------------------
 const getUserProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params;
-    if (!username?.trim()) throw new ApiError(400, "Username is required");
+    // 1️⃣ Logged-in user id
+    const userId = req.user._id;
 
-    const profile = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken -email");
-    if (!profile) throw new ApiError(404, "User profile not found");
+    // 2️⃣ Fetch user profile
+    const profile = await User.findById(userId)
+        .select("-password -refreshToken -email");
 
-    const isFollowing = await Follow.findOne({ follower: req.user._id, following: profile._id });
+    if (!profile) {
+        throw new ApiError(404, "User profile not found");
+    }
 
-    return res.status(200).json(new ApiResponse(200, { profile, isFollowing: Boolean(isFollowing) }, "Profile fetched successfully"));
+    // 3️⃣ Fetch posts created by the user
+    const posts = await Post.find({ createdBy: userId })  // <-- use createdBy
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "username avatar");  // <-- populate createdBy
+
+    // 4️⃣ Response
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { profile, posts },
+            "Profile and posts fetched successfully"
+        )
+    );
 });
 
-// ---------------------- Follow / Unfollow ----------------------
-/*const toggleFollow = asyncHandler(async (req, res) => {
-    const { userId } = req.params;
-    if (req.user._id.toString() === userId) {
-        throw new ApiError(400, "You cannot follow yourself");
-    }
-
-    const existingFollow = await Follow.findOne({ follower: req.user._id, following: userId });
-    if (existingFollow) {
-        await Follow.deleteOne({ _id: existingFollow._id });
-        return res.status(200).json(new ApiResponse(200, {}, "Unfollowed successfully"));
-    }
-
-    await Follow.create({ follower: req.user._id, following: userId });
-    return res.status(200).json(new ApiResponse(200, {}, "Followed successfully"));
-});*/
 
 // ---------------------- Export ----------------------
 export {
@@ -215,8 +195,6 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    changeCurrentPassword,
-    getCurrentUser,
     updateProfile,
     getUserProfile,
    
